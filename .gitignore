@@ -23,7 +23,8 @@ dist-ssr
 *.sln
 *.sw?
 
-# wrangler files
+# Cloudflare files
+.cloudflare
 .wrangler
 .dev.vars*
 !.dev.vars.example

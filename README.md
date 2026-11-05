@@ -1,18 +1,46 @@
-# React + TypeScript + Vite
+# Cloudflare Workers Demo
 
-## Develop and Deploy
+A React + TypeScript + Vite app with a Cloudflare Worker backend, deployed with the [`cf` CLI](https://www.npmjs.com/package/cf).
 
-🔍 View Project
+**Live:** https://openbordersfoundation.com (also https://www.openbordersfoundation.com)
 
-Visit: https://my-react-app.ansel-brandt.workers.dev
+## Routes
 
-Dash: https://dash.cloudflare.com/?to=/:account/workers/services/view/my-react-app/production
+| Path | Served by | Response |
+|---|---|---|
+| `/api/*` | Worker (`worker/index.ts`) | JSON: `{"name":"Cloudflare"}` |
+| `/`, and any other page path | Static assets (Vite build) | `index.html`; unknown paths fall back to the app (single-page app) |
+| Other non-asset requests | Worker | `404` |
 
-💻 Continue Developing
+The "Name from API" button in `src/App.tsx` calls `/api/`.
 
-Change directories: `cd my-react-app`
+## Configuration
 
-Deploy again: `npm run deploy`
+Everything is configured in `cloudflare.config.ts`, which replaces `wrangler.jsonc`:
+
+```ts
+worker: {
+  name: "cloudflare-workers-demo",
+  compatibilityDate: "2026-11-04",
+  entrypoint: "./worker/index.ts",
+  assets: { notFoundHandling: "single-page-application" },
+  domains: ["openbordersfoundation.com", "www.openbordersfoundation.com"],
+  observability: { enabled: true },
+}
+```
+
+`@cloudflare/vite-plugin` (2.x beta) reads this file for both `vite dev` and `vite build`. Worker types are generated into `.cloudflare/types/index.d.ts` (gitignored) and referenced from `tsconfig.worker.json`.
+
+## Scripts
+
+- `npm run dev`: Vite dev server, with the Worker running locally in workerd
+- `npm run build`: generate Worker types, typecheck, and build
+- `npm run cf-typegen`: regenerate Worker types only (`cf workers types`)
+- `npm run deploy`: build and deploy with `cf deploy`
+
+## Deployment
+
+Pushes to `master` build and deploy automatically through Cloudflare Workers Builds, which runs `npx cf deploy` from the repo root. `cf deploy` builds with `vite build` and attaches the custom domains listed in the config.
 
 ## Notes
 
